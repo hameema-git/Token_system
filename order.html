@@ -1,1 +1,97 @@
-<html><body><h1>Order Page</h1></body></html>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Order Form</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .item { margin-bottom: 10px; }
+        button { padding: 10px 15px; margin-top: 15px; }
+    </style>
+
+    <!-- Load API as module -->
+    <script type="module">
+        import { apiGet, apiPost } from "./js/api.v2.js?v=2";
+
+        window.apiGet = apiGet;
+        window.apiPost = apiPost;
+    </script>
+</head>
+<body>
+
+<h1>Place Your Order</h1>
+
+<div id="menu"></div>
+
+<h3>Your Details</h3>
+<input id="name" placeholder="Your Name"><br><br>
+<input id="phone" placeholder="Phone Number"><br><br>
+<button onclick="submitOrder()">Submit Order</button>
+
+<script>
+let menuData = [];
+
+// Load the menu from Google Sheet
+window.onload = async () => {
+    menuData = await apiGet({ action: "getmenu" });
+
+    const menuDiv = document.getElementById("menu");
+
+    menuData.forEach((item, idx) => {
+        menuDiv.innerHTML += `
+            <div class="item">
+                <input type="checkbox" id="item_${idx}" data-price="${item.price}">
+                <label for="item_${idx}">${item.name} – ₹${item.price}</label>
+            </div>
+        `;
+    });
+};
+
+async function submitOrder() {
+    const name = document.getElementById("name").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+
+    if (!name || !phone) {
+        alert("Please enter name and phone");
+        return;
+    }
+
+    let selected = [];
+    let total = 0;
+
+    menuData.forEach((item, idx) => {
+        const checkbox = document.getElementById("item_" + idx);
+        if (checkbox.checked) {
+            selected.push({
+                name: item.name,
+                price: item.price
+            });
+            total += Number(item.price);
+        }
+    });
+
+    if (selected.length === 0) {
+        alert("Please select at least one item.");
+        return;
+    }
+
+    const items_json = JSON.stringify(selected);
+
+    const res = await apiPost({
+        action: "createorder",
+        name,
+        phone,
+        items_json,
+        total: String(total)
+    });
+
+    if (res.error) {
+        alert("Error: " + res.error);
+    } else {
+        alert("Order Received! Token will be assigned soon.");
+        window.location.reload();
+    }
+}
+</script>
+
+</body>
+</html>
