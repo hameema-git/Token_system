@@ -3,9 +3,10 @@
 // Reads response inside <pre>...</pre>
 // No proxy, direct GAS call
 // =====================================
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyZuO12wa0T-Ob4Zo-MmlB9pVP45we3jZvMke7CtA0wMdei7wfQHNuU3SebNlPQosGGFA/exec";
+// const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyZuO12wa0T-Ob4Zo-MmlB9pVP45we3jZvMke7CtA0wMdei7wfQHNuU3SebNlPQosGGFA/exec";
 
 // const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyZuO12wa0T-Ob4Zo-MmlB9pVP45we3jZvMke7CtA0wMdei7wfQHNuU3SebNlPQosGGFA/exec";
+const SCRIPT_URL = "/api/proxy";
 
 // Extract JSON from inside <pre>...</pre>
 async function parsePreResponse(response) {
