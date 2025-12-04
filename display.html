@@ -1,85 +1,82 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Now Serving – ChocoBrownie</title>
+  <meta charset="utf-8" />
+  <title>Now Serving – ChocoBrownie</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: Arial, sans-serif; text-align:center; background:#f8f8f8; padding-top:40px; }
+    .box { background:#fff; width:420px; margin:20px auto; padding:34px; border-radius:16px; box-shadow:0 6px 20px rgba(0,0,0,0.08); }
+    h1 { font-size:46px; margin:6px 0 18px; }
+    .label { font-size:20px; color:#555; margin-top:10px; }
+    .value { font-size:56px; font-weight:700; color:#c9372c; margin:6px 0 14px; letter-spacing:1px; }
+    .info { font-size:16px; color:#666; margin-top:8px; }
+    .small { font-size:13px; color:#999; margin-top:8px; }
+    .err { color:#b12; font-weight:600; }
+  </style>
 
-    <!-- Auto-refresh every 5 seconds -->
-    <meta http-equiv="refresh" content="5">
+  <!-- DO NOT use meta refresh; we use JS polling for better error handling -->
+  <script type="module">
+    import { apiGet } from "./js/api.v2.js";
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background: #f8f8f8;
-            padding-top: 60px;
+    // sanitize and display numeric value (if not a number, show fallback)
+    function showNumber(elId, val, fallback="-") {
+      if (val === undefined || val === null || val === "") {
+        document.getElementById(elId).innerText = fallback;
+        return;
+      }
+      const n = Number(val);
+      if (Number.isFinite(n)) document.getElementById(elId).innerText = n;
+      else document.getElementById(elId).innerText = String(val);
+    }
+
+    // main loader with retry
+    let failingCount = 0;
+    async function loadStatus() {
+      try {
+        const status = await apiGet({ action: "getstatus" });
+
+        // GAS should return { session_id, currentToken, lastTokenIssued, queueLength }
+        // handle error object from GAS/proxy
+        if (status && status.error) {
+          console.warn("GAS error:", status);
+          document.getElementById("err").innerText = status.error;
+          failingCount++;
+          return;
+        } else {
+          document.getElementById("err").innerText = "";
         }
 
-        .box {
-            background: white;
-            width: 380px;
-            margin: auto;
-            padding: 30px;
-            border-radius: 16px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
-        }
+        // show results (stable)
+        showNumber("current", status.currentToken ?? "-", "-");
+        showNumber("last", status.lastTokenIssued ?? "-", "-");
+        showNumber("queue", status.queueLength ?? 0, "0");
 
-        h1 {
-            font-size: 48px;
-            margin-bottom: 10px;
-        }
+        // session id (show dash if missing)
+        document.getElementById("session").innerText = status.session_id || "-";
 
-        .label {
-            font-size: 22px;
-            color: #555;
-        }
+        failingCount = 0;
+      } catch (err) {
+        console.error("loadStatus error:", err);
+        document.getElementById("err").innerText = "Network error. See console.";
+        failingCount++;
+      } finally {
+        // if repeated failures, poll slower to avoid extra load
+        const delay = failingCount >= 5 ? 5000 : 2000; // ms
+        setTimeout(loadStatus, delay);
+      }
+    }
 
-        .value {
-            font-size: 52px;
-            font-weight: bold;
-            color: #d9534f;
-            margin-bottom: 20px;
-        }
-
-        .info {
-            font-size: 18px;
-            margin-top: 20px;
-            color: #777;
-        }
-    </style>
-
-    <!-- Load API -->
-    <script type="module">
-        import { apiGet } from "./js/api.v2.js?v=2";
-
-        window.loadStatus = async function () {
-            try {
-                const status = await apiGet({ action: "getstatus" });
-
-                document.getElementById("current").innerText =
-                    status.currentToken ?? "-";
-
-                document.getElementById("last").innerText =
-                    status.lastTokenIssued ?? "-";
-
-                document.getElementById("queue").innerText =
-                    status.queueLength ?? "0";
-
-                document.getElementById("session").innerText =
-                    status.session_id ?? "-";
-            } catch (err) {
-                console.error("Error:", err);
-            }
-        };
-
-        window.onload = loadStatus;
-    </script>
+    // start polling when page ready
+    window.addEventListener("DOMContentLoaded", () => {
+      loadStatus();
+    });
+  </script>
 </head>
-
 <body>
+  <h1>🍫 ChocoBrownie</h1>
 
-<h1>🍫 ChocoBrownie</h1>
-
-<div class="box">
+  <div class="box">
     <div class="label">NOW SERVING</div>
     <div id="current" class="value">-</div>
 
@@ -90,9 +87,11 @@
     <div id="queue" class="value">-</div>
 
     <div class="info">
-        Session: <span id="session">-</span>
+      Session: <span id="session">-</span>
     </div>
-</div>
 
+    <div id="err" class="small err"></div>
+    <div class="small">Auto-updates every 2s. If numbers are blank, open the browser console (F12 → Network) to inspect /api/proxy?action=getstatus</div>
+  </div>
 </body>
 </html>
