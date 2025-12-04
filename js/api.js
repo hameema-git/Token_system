@@ -1,8 +1,8 @@
 // =====================================
-// FINAL API.js (DIRECT GOOGLE SCRIPT)
+// FINAL API.js (via Vercel Proxy)
 // =====================================
 
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw_sSmuihZxIAnroqzLFmmCBOpFM5lhjhDdVWoBL6CSjNWWsCMEV5Q62jYg0kOWDCuP2Q/exec";
+const SCRIPT_URL = "https://token-system-jade.vercel.app/api/proxy";
 
 // Extract JSON from <pre>...</pre> returned by Google Apps Script
 async function parsePreResponse(response) {
@@ -29,8 +29,7 @@ export async function apiPost(params = {}) {
     Object.keys(params).forEach(k => form.append(k, params[k]));
 
     const res = await fetch(SCRIPT_URL, { method: "POST", body: form });
-
     return parsePreResponse(res);
 }
 
-console.log("api.js loaded (DIRECT GAS VERSION)");
+console.log("api.js loaded (VERCEL PROXY VERSION)");
