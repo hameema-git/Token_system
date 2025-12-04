@@ -8,11 +8,13 @@ const SCRIPT_URL = "https://token-system-jade.vercel.app/api/proxy.js";
 async function parsePreResponse(response) {
     const text = await response.text();
 
-    const match = text.match(/<pre>([\s\S]*?)<\/pre>/i);
-    if (!match) throw new Error("Invalid GAS response: " + text);
-
-    return JSON.parse(match[1]);
+    try {
+        return JSON.parse(text);   // proxy gives pure JSON now
+    } catch (err) {
+        throw new Error("Invalid GAS response: " + text);
+    }
 }
+
 
 // GET request
 export async function apiGet(params = {}) {
