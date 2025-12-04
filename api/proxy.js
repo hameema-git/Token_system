@@ -6,34 +6,33 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Missing action parameter" });
     }
 
-    // Your Google Apps Script deployment URL
     const GAS_URL =
       "https://script.google.com/macros/s/AKfycbw_sSmuihZxIAnroqzLFmmCBOpFM5lhjhDdVWoBL6CSjNWWsCMEV5Q62jYg0kOWDCuP2Q/exec";
 
-    let url = `${GAS_URL}?action=${action}`;
+    const params = new URLSearchParams({ action, ...rest });
+    const url = `${GAS_URL}?${params.toString()}`;
 
-    // Forward GET → GAS
-    let gasResponse;
+    let response;
 
     if (req.method === "GET") {
-      gasResponse = await fetch(url);
-    }
+      response = await fetch(url, {
+        method: "GET",
+        redirect: "follow",
+        headers: { "Content-Type": "application/json" }
+      });
+    } else if (req.method === "POST") {
+      const form = new URLSearchParams(rest);
 
-    // Forward POST → GAS
-    else if (req.method === "POST") {
-      const form = new URLSearchParams();
-
-      Object.keys(rest).forEach((k) => form.append(k, rest[k]));
-
-      gasResponse = await fetch(url, {
+      response = await fetch(url, {
         method: "POST",
         body: form,
+        redirect: "follow"
       });
     }
 
-    const text = await gasResponse.text();
+    const body = await response.text();
 
-    // ---- FIX CORS ----
+    // CORS headers
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -42,9 +41,11 @@ export default async function handler(req, res) {
       return res.status(200).end();
     }
 
-    return res.status(200).send(text);
-  } catch (err) {
-    console.error("Proxy error:", err);
-    return res.status(500).json({ error: err.message });
+    return res.status(200).send(body);
+
+  } catch (error) {
+    console.error("Proxy Error:", error);
+    return res.status(500).json({ error: error.message });
   }
 }
+
