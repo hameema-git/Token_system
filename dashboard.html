@@ -99,15 +99,15 @@ async function loadOrders() {
     }
 }
 
-// Approve order
+// Approve order (POST)
 async function approveOrder(rowIndex) {
     const pwd = prompt("Enter staff password:");
     if (!pwd) return;
 
     const res = await apiPost({
         action: "approveorder",
-        rowIndex,
-        staff_password: pwd
+        rowIndex: String(rowIndex),
+        staff_password: String(pwd)
     });
 
     if (res.error) alert(res.error);
@@ -116,21 +116,23 @@ async function approveOrder(rowIndex) {
     loadOrders();
 }
 
-// Start session
+// Start new session (POST)
 async function startSession() {
     const pwd = prompt("Password:");
     if (!pwd) return;
 
     const res = await apiPost({
         action: "newsession",
-        staff_password: pwd
+        staff_password: String(pwd)
     });
 
-    alert("Session Started: " + res.session_id);
+    if (res.error) alert(res.error);
+    else alert("Session Started: " + res.session_id);
+
     loadOrders();
 }
 
-// Next token
+// Next token (POST)
 async function nextToken() {
     const pwd = prompt("Password:");
     if (!pwd) return;
@@ -138,13 +140,14 @@ async function nextToken() {
     const res = await apiPost({
         action: "updatetoken",
         action2: "next",
-        staff_password: pwd
+        staff_password: String(pwd)
     });
 
-    alert("Serving Token: " + res.currentToken);
+    if (res.error) alert(res.error);
+    else alert("Serving Token: " + res.currentToken);
 }
 
-// Set token
+// Set token manually (POST)
 async function setToken() {
     const pwd = prompt("Password:");
     if (!pwd) return;
@@ -155,11 +158,12 @@ async function setToken() {
     const res = await apiPost({
         action: "updatetoken",
         action2: "set",
-        value: num,
-        staff_password: pwd
+        value: String(num),
+        staff_password: String(pwd)
     });
 
-    alert("Token Set: " + res.currentToken);
+    if (res.error) alert(res.error);
+    else alert("Token Set: " + res.currentToken);
 }
 </script>
 
