@@ -14,23 +14,29 @@ export default async function handler(req, res) {
 
     let response;
 
+    // ✅ UPDATED GET REQUEST
     if (req.method === "GET") {
       response = await fetch(url, {
         method: "GET",
         redirect: "follow",
-        headers: { "Content-Type": "application/json" }
+        mode: "no-cors"   // <-- IMPORTANT FIX
       });
-    } else if (req.method === "POST") {
+    }
+
+    // ✅ UPDATED POST REQUEST
+    else if (req.method === "POST") {
       const form = new URLSearchParams(rest);
 
       response = await fetch(url, {
         method: "POST",
         body: form,
-        redirect: "follow"
+        redirect: "follow",
+        mode: "no-cors"   // <-- IMPORTANT FIX
       });
     }
 
-    const body = await response.text();
+    // ✅ SAFELY READ BODY (GAS often sends opaque responses)
+    const body = await response.text().catch(() => "");
 
     // CORS headers
     res.setHeader("Access-Control-Allow-Origin", "*");
@@ -48,4 +54,3 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: error.message });
   }
 }
-
