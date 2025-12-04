@@ -2,7 +2,7 @@
 // FINAL API.js (via Vercel Proxy)
 // =====================================
 
-const SCRIPT_URL = "https://token-system-jade.vercel.app/api/proxy.js";
+const SCRIPT_URL = "https://token-system-jade.vercel.app/api/proxy";
 
 // Extract JSON from <pre>...</pre> returned by Google Apps Script
 async function parsePreResponse(response) {
