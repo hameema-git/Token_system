@@ -2,7 +2,12 @@
 <html>
 <head>
     <title>Staff Dashboard</title>
-    <script src="js/api.js"></script>
+    <script type="module">
+    import { apiGet, apiPost } from "./js/api.js";
+    window.apiGet = apiGet;
+    window.apiPost = apiPost;
+</script>
+
     <style>
         body {
             font-family: Arial, sans-serif;
