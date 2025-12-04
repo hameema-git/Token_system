@@ -14,16 +14,19 @@ export default async function handler(req, res) {
 
     let response;
 
-    // ✅ UPDATED GET REQUEST
+    // Correct GET handler
     if (req.method === "GET") {
       response = await fetch(url, {
         method: "GET",
         redirect: "follow",
-        mode: "no-cors"   // <-- IMPORTANT FIX
+        headers: {
+          "Content-Type": "application/json",
+          "User-Agent": "Mozilla/5.0",     // <-- THIS PREVENTS SANDBOX REDIRECT
+        },
       });
     }
 
-    // ✅ UPDATED POST REQUEST
+    // Correct POST handler
     else if (req.method === "POST") {
       const form = new URLSearchParams(rest);
 
@@ -31,14 +34,23 @@ export default async function handler(req, res) {
         method: "POST",
         body: form,
         redirect: "follow",
-        mode: "no-cors"   // <-- IMPORTANT FIX
+        headers: {
+          "User-Agent": "Mozilla/5.0",
+        },
       });
     }
 
-    // ✅ SAFELY READ BODY (GAS often sends opaque responses)
-    const body = await response.text().catch(() => "");
+    const text = await response.text();
 
-    // CORS headers
+    // Fix: If Google returned HTML instead of JSON
+    if (text.startsWith("<!DOCTYPE html") || text.includes("<html")) {
+      return res.status(500).json({
+        error: "GAS returned HTML page instead of JSON",
+        details: text.substring(0, 200),
+      });
+    }
+
+    // CORS
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -47,10 +59,10 @@ export default async function handler(req, res) {
       return res.status(200).end();
     }
 
-    return res.status(200).send(body);
-
+    return res.status(200).send(text);
   } catch (error) {
     console.error("Proxy Error:", error);
     return res.status(500).json({ error: error.message });
   }
 }
+
