@@ -1,65 +1,64 @@
 export default async function handler(req, res) {
   try {
-    const { action, ...rest } = req.query;
+    let params = {};
+
+    // ----------------------------
+    // HANDLE GET REQUEST
+    // ----------------------------
+    if (req.method === "GET") {
+      params = req.query;
+    }
+
+    // ----------------------------
+    // HANDLE POST REQUEST (FIX!)
+    // ----------------------------
+    else if (req.method === "POST") {
+      // Read raw POST body
+      const rawBody = await new Promise(resolve => {
+        let body = "";
+        req.on("data", chunk => body += chunk.toString());
+        req.on("end", () => resolve(body));
+      });
+
+      // Parse form-urlencoded
+      params = Object.fromEntries(new URLSearchParams(rawBody));
+    }
+
+    const { action, ...rest } = params;
 
     if (!action) {
       return res.status(400).json({ error: "Missing action parameter" });
     }
 
+    // GAS URL
     const GAS_URL =
       "https://script.google.com/macros/s/AKfycbw_sSmuihZxIAnroqzLFmmCBOpFM5lhjhDdVWoBL6CSjNWWsCMEV5Q62jYg0kOWDCuP2Q/exec";
 
-    const params = new URLSearchParams({ action, ...rest });
-    const url = `${GAS_URL}?${params.toString()}`;
+    const sendParams = new URLSearchParams({ action, ...rest });
+    const url = `${GAS_URL}?${sendParams.toString()}`;
 
     let response;
 
-    // Correct GET handler
     if (req.method === "GET") {
-      response = await fetch(url, {
-        method: "GET",
-        redirect: "follow",
-        headers: {
-          "Content-Type": "application/json",
-          "User-Agent": "Mozilla/5.0",     // <-- THIS PREVENTS SANDBOX REDIRECT
-        },
-      });
-    }
-
-    // Correct POST handler
-    else if (req.method === "POST") {
-      const form = new URLSearchParams(rest);
-
-      response = await fetch(url, {
+      response = await fetch(url);
+    } else {
+      response = await fetch(GAS_URL, {
         method: "POST",
-        body: form,
-        redirect: "follow",
-        headers: {
-          "User-Agent": "Mozilla/5.0",
-        },
+        body: sendParams
       });
     }
 
-    const text = await response.text();
-
-    // Fix: If Google returned HTML instead of JSON
-    if (text.startsWith("<!DOCTYPE html") || text.includes("<html")) {
-      return res.status(500).json({
-        error: "GAS returned HTML page instead of JSON",
-        details: text.substring(0, 200),
-      });
-    }
+    const body = await response.text();
 
     // CORS
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-    if (req.method === "OPTIONS") {
-      return res.status(200).end();
-    }
+    if (req.method === "OPTIONS") return res.status(200).end();
 
-    return res.status(200).send(text);
+    return res.status(200).send(body);
+
   } catch (error) {
     console.error("Proxy Error:", error);
     return res.status(500).json({ error: error.message });
