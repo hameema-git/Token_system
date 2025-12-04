@@ -2,11 +2,13 @@
 <html>
 <head>
     <title>Staff Dashboard</title>
+
+    <!-- Load API as ES Module -->
     <script type="module">
-    import { apiGet, apiPost } from "./js/api.js";
-    window.apiGet = apiGet;
-    window.apiPost = apiPost;
-</script>
+        import { apiGet, apiPost } from "./js/api.js";
+        window.apiGet = apiGet;
+        window.apiPost = apiPost;
+    </script>
 
     <style>
         body {
@@ -14,28 +16,17 @@
             padding: 20px;
             background: #f4f4f4;
         }
-        h1 {
-            margin-bottom: 20px;
-        }
-        button {
-            padding: 10px 15px;
-            margin: 5px;
-            cursor: pointer;
-        }
         table {
             border-collapse: collapse;
             width: 100%;
-            margin-top: 15px;
             background: white;
         }
         th, td {
             border: 1px solid #ccc;
             padding: 10px;
-            text-align: left;
         }
-        th {
-            background: #ddd;
-        }
+        th { background: #ddd; }
+        button { padding: 8px 12px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -51,6 +42,7 @@
 <button onclick="setToken()">Set Token</button>
 
 <h2>Orders (Current Session)</h2>
+
 <table id="ordersTable">
     <thead>
         <tr>
@@ -68,98 +60,107 @@
 </table>
 
 <script>
-
-// Load orders on page start
+// Load orders when page opens
 window.onload = loadOrders;
 
-// Fetch orders of current session
+// Fetch orders from API
 async function loadOrders() {
-    const data = await apiGet("getorders");
-    const tableBody = document.querySelector("#ordersTable tbody");
-    tableBody.innerHTML = "";
+    try {
+        const data = await apiGet({ action: "getorders" });
+        console.log("Orders received:", data);
 
-    data.forEach((order, index) => {
-        let row = `
-            <tr>
-                <td>${index + 1}</td>
-                <td>${order.name}</td>
-                <td>${order.phone}</td>
-                <td>${order.items_json}</td>
-                <td>${order.total}</td>
-                <td>${order.status}</td>
-                <td>${order.token || "-"}</td>
-                <td>
-                    ${order.status === "pending"
-                        ? `<button onclick="approveOrder(${index + 2})">Approve</button>`
-                        : "✔"}
-                </td>
-            </tr>
-        `;
-        tableBody.innerHTML += row;
-    });
+        const table = document.querySelector("#ordersTable tbody");
+        table.innerHTML = "";
+
+        data.forEach((order, i) => {
+            const index = i + 2; // Row index in sheet
+
+            table.innerHTML += `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td>${order.name}</td>
+                    <td>${order.phone}</td>
+                    <td>${order.items_json}</td>
+                    <td>${order.total}</td>
+                    <td>${order.status}</td>
+                    <td>${order.token || "-"}</td>
+                    <td>
+                        ${order.status === "pending"
+                            ? `<button onclick="approveOrder(${index})">Approve</button>`
+                            : "✔"}
+                    </td>
+                </tr>
+            `;
+        });
+
+    } catch (err) {
+        console.error("Error loading orders", err);
+        alert("Failed to load orders");
+    }
 }
 
-// Approve order & assign token
+// Approve order
 async function approveOrder(rowIndex) {
     const pwd = prompt("Enter staff password:");
     if (!pwd) return;
 
-    const res = await apiPost("approveorder", {
-        rowIndex: rowIndex,
+    const res = await apiPost({
+        action: "approveorder",
+        rowIndex,
         staff_password: pwd
     });
 
     if (res.error) alert(res.error);
-    else alert("Token Assigned: " + res.token);
+    else alert("Assigned Token: " + res.token);
 
     loadOrders();
 }
 
-// Start new session
+// Start session
 async function startSession() {
-    const pwd = prompt("Enter staff password:");
+    const pwd = prompt("Password:");
     if (!pwd) return;
 
-    const res = await apiPost("newsession", {
+    const res = await apiPost({
+        action: "newsession",
         staff_password: pwd
     });
 
-    if (res.error) alert(res.error);
-    else alert("New Session Started: " + res.session_id);
-
+    alert("Session Started: " + res.session_id);
     loadOrders();
 }
 
 // Next token
 async function nextToken() {
-    const pwd = prompt("Staff password:");
+    const pwd = prompt("Password:");
     if (!pwd) return;
 
-    const res = await apiPost("updatetoken", {
-        action: "next",
+    const res = await apiPost({
+        action: "updatetoken",
+        action2: "next",
         staff_password: pwd
     });
 
     alert("Serving Token: " + res.currentToken);
 }
 
-// Set specific token
+// Set token
 async function setToken() {
-    const pwd = prompt("Staff password:");
+    const pwd = prompt("Password:");
     if (!pwd) return;
 
-    const newToken = prompt("Enter token number to set:");
-    if (!newToken) return;
+    const num = prompt("Enter token:");
+    if (!num) return;
 
-    const res = await apiPost("updatetoken", {
-        action: "set",
-        value: newToken,
+    const res = await apiPost({
+        action: "updatetoken",
+        action2: "set",
+        value: num,
         staff_password: pwd
     });
 
-    alert("Token Set To: " + res.currentToken);
+    alert("Token Set: " + res.currentToken);
 }
-
 </script>
 
 </body>
