@@ -29,4 +29,21 @@ export async function apiGet(params = {}) {
   return parseJsonResponse(res);
 }
 
+export async function apiPost(params = {}) {
+  const body = new URLSearchParams();
+  Object.keys(params).forEach(k => body.append(k, params[k]));
+
+  const res = await fetch(window.location.origin + "/api/proxy", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body
+  });
+
+  if (!res.ok) {
+    const txt = await res.text().catch(()=>"");
+    throw new Error(`Proxy POST failed: ${res.status} — ${txt}`);
+  }
+
+  return parseJsonResponse(res);
+}
 
