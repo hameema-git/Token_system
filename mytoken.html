@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Token – ChocoBrownie</title>
+    <style>
+        body {
+            font-family: Arial;
+            text-align: center;
+            padding: 40px;
+            background: #fafafa;
+        }
+
+        h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            margin: 30px auto;
+            width: 330px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .label {
+            font-size: 18px;
+            margin-top: 20px;
+            color: #444;
+        }
+
+        .value {
+            font-size: 40px;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+
+        #backBtn {
+            display: block;
+            margin: 25px auto;
+            padding: 14px 18px;
+            background: #4CAF50;
+            color: white;
+            border-radius: 8px;
+            font-size: 18px;
+            text-decoration: none;
+            width: 250px;
+        }
+    </style>
+
+    <!-- Load API -->
+    <script type="module">
+        import { apiGet } from "./js/api.v2.js?v=3";
+        window.apiGet = apiGet;
+    </script>
+</head>
+
+<body>
+
+<h1>🍫 My Token</h1>
+
+<div class="card">
+    <div class="label">Your Token:</div>
+    <div id="myToken" class="value">-</div>
+
+    <div class="label">Status:</div>
+    <div id="myStatus" class="value" style="font-size:28px">-</div>
+
+    <div class="label">People Ahead of You:</div>
+    <div id="myPosition" class="value">-</div>
+</div>
+
+<a id="backBtn" href="index.html">⬅ Back to Home</a>
+
+<script>
+window.onload = async () => {
+    const phone = localStorage.getItem("myPhone");
+
+    if (!phone) {
+        alert("No phone number found. Place an order first.");
+        return;
+    }
+
+    try {
+        const res = await apiGet({ action: "getmytoken", phone });
+
+        document.getElementById("myToken").innerText = res.token || "-";
+        document.getElementById("myStatus").innerText = res.status || "-";
+        document.getElementById("myPosition").innerText = res.position ?? "-";
+
+    } catch (err) {
+        console.error(err);
+        alert("Unable to load your token status.");
+    }
+};
+</script>
+
+</body>
+</html>
