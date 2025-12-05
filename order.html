@@ -60,7 +60,7 @@
 <script>
 let menuData = [];
 
-// Load the menu from Google Sheets
+// Load menu
 window.onload = async () => {
     menuData = await apiGet({ action: "getmenu" });
 
@@ -76,15 +76,13 @@ window.onload = async () => {
     });
 };
 
-// Update total price
+// Update total
 function updateTotal() {
     let total = 0;
 
     menuData.forEach((item, idx) => {
         let qty = Number(document.getElementById("qty_" + idx).value);
-        if (qty > 0) {
-            total += item.price * qty;
-        }
+        if (qty > 0) total += item.price * qty;
     });
 
     document.getElementById("totalView").innerText = "Total: ₹" + total;
@@ -134,11 +132,15 @@ async function submitOrder() {
     if (res.error) {
         alert("Error: " + res.error);
     } else {
+        // ⭐ SAVE CUSTOMER PHONE FOR TOKEN TRACKING
+        localStorage.setItem("myPhone", phone);
+
         alert("Order received! Please wait for staff approval to get your token.");
         window.location.href = "index.html";
     }
 }
 </script>
+
 
 </body>
 </html>

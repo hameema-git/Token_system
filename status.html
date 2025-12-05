@@ -1,84 +1,70 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Your Token Status</title>
+    <title>Token Status</title>
+    <style>
+        body { font-family: Arial; background: #f7f7f7; padding: 30px; text-align: center; }
+        .card {
+            width: 320px; margin: auto; padding: 25px;
+            background: white; border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .number { font-size: 42px; font-weight: bold; }
+        .label { margin-top: 20px; font-size: 20px; }
+    </style>
 
     <script type="module">
         import { apiGet } from "./js/api.v2.js?v=3";
-        window.apiGet = apiGet;
-    </script>
 
-    <style>
-        body { 
-            font-family: Arial; 
-            text-align: center; 
-            padding: 20px; 
-            background: #fafafa;
+        async function loadStatus() {
+            try {
+                // 1️⃣ Get general queue status
+                const status = await apiGet({ action: "getstatus" });
+                document.getElementById("current").innerText = status.currentToken;
+
+                // 2️⃣ Retrieve customer phone
+                const phone = localStorage.getItem("myPhone");
+                if (!phone) return;
+
+                // 3️⃣ Get customer’s token
+                const my = await apiGet({
+                    action: "getmytoken",
+                    phone: phone
+                });
+
+                if (my.token) {
+                    document.getElementById("yourtoken").innerText = my.token;
+                    document.getElementById("ahead").innerText = my.ahead;
+                } else {
+                    document.getElementById("yourtoken").innerText = "-";
+                    document.getElementById("ahead").innerText = "-";
+                }
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById("current").innerText = "Error";
+            }
         }
-        .box {
-            border: 1px solid #ddd;
-            background: #fff;
-            padding: 20px;
-            width: 330px;
-            margin: auto;
-            border-radius: 10px;
-        }
-        .big {
-            font-size: 32px;
-            font-weight: bold;
-            margin: 10px 0;
-        }
-        .label {
-            font-size: 18px;
-            color: #444;
-        }
-    </style>
+
+        setInterval(loadStatus, 3000);
+        window.onload = loadStatus;
+    </script>
 </head>
+
 <body>
 
 <h1>🍫 Token Status</h1>
 
-<div class="box">
-    <p class="label">Current Token Being Served:</p>
-    <div id="currentToken" class="big">Loading...</div>
+<div class="card">
+    <div class="label">Current Token Being Served:</div>
+    <div class="number" id="current">0</div>
 
-    <p class="label">Your Token:</p>
-    <div id="yourToken" class="big">Loading...</div>
+    <div class="label">Your Token:</div>
+    <div class="number" id="yourtoken">-</div>
 
-    <p class="label">People Ahead of You:</p>
-    <div id="queue" class="big">Loading...</div>
+    <div class="label">People Ahead of You:</div>
+    <div class="number" id="ahead">-</div>
 </div>
-
-<script>
-async function loadStatus() {
-    try {
-        const status = await apiGet({ action: "getstatus" });
-
-        document.getElementById("currentToken").innerText = status.currentToken;
-
-        let userToken = localStorage.getItem("user_token");
-
-        if (!userToken) {
-            document.getElementById("yourToken").innerText = "-";
-            document.getElementById("queue").innerText = "-";
-            return;
-        }
-
-        userToken = Number(userToken);
-        document.getElementById("yourToken").innerText = userToken;
-
-        const queue = Math.max(userToken - status.currentToken, 0);
-        document.getElementById("queue").innerText = queue;
-
-    } catch (err) {
-        alert("Unable to load token status");
-    }
-}
-
-// Refresh every 5 seconds
-loadStatus();
-setInterval(loadStatus, 5000);
-</script>
 
 </body>
 </html>
