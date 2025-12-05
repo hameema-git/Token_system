@@ -130,6 +130,20 @@ async function loadOrders() {
 // ---------------------------------------
 // APPROVE ORDER (NO PASSWORD NEEDED)
 // ---------------------------------------
+// async function approveOrder(rowIndex) {
+//     const res = await apiPost({
+//         action: "approveorder",
+//         rowIndex: rowIndex
+//     });
+
+//     if (res.error) {
+//         alert("Error: " + res.error);
+//         return;
+//     }
+
+//     alert("Assigned Token: " + res.token);
+//     loadOrders();
+// }
 async function approveOrder(rowIndex) {
     const res = await apiPost({
         action: "approveorder",
@@ -137,13 +151,18 @@ async function approveOrder(rowIndex) {
     });
 
     if (res.error) {
-        alert("Error: " + res.error);
+        alert(res.error);
         return;
     }
 
+    // ⭐ Store token locally so customer can check their status
+    localStorage.setItem("user_token", res.token);
+
     alert("Assigned Token: " + res.token);
+
     loadOrders();
 }
+
 
 // ---------------------------------------
 // START NEW SESSION

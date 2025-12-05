@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Your Token Status</title>
+
+    <script type="module">
+        import { apiGet } from "./js/api.v2.js?v=3";
+        window.apiGet = apiGet;
+    </script>
+
+    <style>
+        body { 
+            font-family: Arial; 
+            text-align: center; 
+            padding: 20px; 
+            background: #fafafa;
+        }
+        .box {
+            border: 1px solid #ddd;
+            background: #fff;
+            padding: 20px;
+            width: 330px;
+            margin: auto;
+            border-radius: 10px;
+        }
+        .big {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .label {
+            font-size: 18px;
+            color: #444;
+        }
+    </style>
+</head>
+<body>
+
+<h1>🍫 Token Status</h1>
+
+<div class="box">
+    <p class="label">Current Token Being Served:</p>
+    <div id="currentToken" class="big">Loading...</div>
+
+    <p class="label">Your Token:</p>
+    <div id="yourToken" class="big">Loading...</div>
+
+    <p class="label">People Ahead of You:</p>
+    <div id="queue" class="big">Loading...</div>
+</div>
+
+<script>
+async function loadStatus() {
+    try {
+        const status = await apiGet({ action: "getstatus" });
+
+        document.getElementById("currentToken").innerText = status.currentToken;
+
+        let userToken = localStorage.getItem("user_token");
+
+        if (!userToken) {
+            document.getElementById("yourToken").innerText = "-";
+            document.getElementById("queue").innerText = "-";
+            return;
+        }
+
+        userToken = Number(userToken);
+        document.getElementById("yourToken").innerText = userToken;
+
+        const queue = Math.max(userToken - status.currentToken, 0);
+        document.getElementById("queue").innerText = queue;
+
+    } catch (err) {
+        alert("Unable to load token status");
+    }
+}
+
+// Refresh every 5 seconds
+loadStatus();
+setInterval(loadStatus, 5000);
+</script>
+
+</body>
+</html>
