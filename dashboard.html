@@ -2,11 +2,18 @@
 <html>
 <head>
     <title>Staff Dashboard</title>
+    <meta http-equiv="Cache-Control" content="no-store" />
+
 
     <!-- Load API -->
-    <script type="module">
+    <!-- <script type="module">
         import { apiGet, apiPost } from "./js/api.v2.js?v=3";
         window.apiGet = apiGet;
+        window.apiPost = apiPost;
+    </script> -->
+    <script type="module">
+    import { apiGet, apiPost } from "./js/api.v2.js?v=10";  
+    window.apiGet = apiGet;
         window.apiPost = apiPost;
     </script>
 
