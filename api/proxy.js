@@ -32,7 +32,7 @@ export default async function handler(req, res) {
 
     // GAS URL
     const GAS_URL =
-      "https://script.google.com/macros/s/AKfycbw_sSmuihZxIAnroqzLFmmCBOpFM5lhjhDdVWoBL6CSjNWWsCMEV5Q62jYg0kOWDCuP2Q/exec";
+  "https://script.google.com/macros/s/AKfycbzXIwMSbOFpgbgMBZF3kMMBusAwK_9bgzbABuzmku7iW90ZwHvhaSITJR8_J9oXr3ER/exec";
 
     const sendParams = new URLSearchParams({ action, ...rest });
     const url = `${GAS_URL}?${sendParams.toString()}`;
