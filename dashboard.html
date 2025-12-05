@@ -126,14 +126,25 @@ async function loadOrders() {
 }
 
 // Approve order
-async function approveOrder(rowIndex) {
-    const pwd = prompt("Enter staff password:");
-    if (!pwd) return;
+// async function approveOrder(rowIndex) {
+//     const pwd = prompt("Enter staff password:");
+//     if (!pwd) return;
 
+//     const res = await apiPost({
+//         action: "approveorder",
+//         rowIndex: rowIndex,
+//         staff_password: pwd
+//     });
+
+//     if (res.error) alert(res.error);
+//     else alert("Assigned Token: " + res.token);
+
+//     loadOrders();
+// }
+async function approveOrder(rowIndex) {
     const res = await apiPost({
         action: "approveorder",
-        rowIndex: rowIndex,
-        staff_password: pwd
+        rowIndex
     });
 
     if (res.error) alert(res.error);
@@ -141,6 +152,7 @@ async function approveOrder(rowIndex) {
 
     loadOrders();
 }
+
 
 // Start new session
 async function startSession() {
