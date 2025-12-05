@@ -75,17 +75,21 @@
 <a id="backBtn" href="index.html">⬅ Back to Home</a>
 
 <script>
-window.onload = async () => {
+
+// ⭐ Reusable function to load user's token
+async function loadMyToken() {
     const phone = localStorage.getItem("myPhone");
 
     if (!phone) {
         alert("No phone number found. Place an order first.");
+        window.location.href = "order.html";
         return;
     }
 
     try {
         const res = await apiGet({ action: "getmytoken", phone });
 
+        // Update UI
         document.getElementById("myToken").innerText = res.token || "-";
         document.getElementById("myStatus").innerText = res.status || "-";
         document.getElementById("myPosition").innerText = res.position ?? "-";
@@ -94,7 +98,14 @@ window.onload = async () => {
         console.error(err);
         alert("Unable to load your token status.");
     }
-};
+}
+
+// Load once on page open
+window.onload = loadMyToken;
+
+// Auto-refresh every 4 seconds
+setInterval(loadMyToken, 4000);
+
 </script>
 
 </body>
