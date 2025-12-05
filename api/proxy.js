@@ -3,24 +3,23 @@ export default async function handler(req, res) {
     let params = {};
 
     // ----------------------------
-    // HANDLE GET REQUEST
+    // HANDLE GET REQUEST (FIXED)
     // ----------------------------
     if (req.method === "GET") {
-      params = req.query;
+      const urlObj = new URL(req.url, `http://${req.headers.host}`);
+      params = Object.fromEntries(urlObj.searchParams.entries());
     }
 
     // ----------------------------
-    // HANDLE POST REQUEST (FIX!)
+    // HANDLE POST REQUEST (FIXED)
     // ----------------------------
     else if (req.method === "POST") {
-      // Read raw POST body
       const rawBody = await new Promise(resolve => {
         let body = "";
-        req.on("data", chunk => body += chunk.toString());
+        req.on("data", chunk => (body += chunk.toString()));
         req.on("end", () => resolve(body));
       });
 
-      // Parse form-urlencoded
       params = Object.fromEntries(new URLSearchParams(rawBody));
     }
 
@@ -32,7 +31,7 @@ export default async function handler(req, res) {
 
     // GAS URL
     const GAS_URL =
-  "https://script.google.com/macros/s/AKfycbzXIwMSbOFpgbgMBZF3kMMBusAwK_9bgzbABuzmku7iW90ZwHvhaSITJR8_J9oXr3ER/exec";
+      "https://script.google.com/macros/s/AKfycbzXIwMSbOFpgbgMBZF3kMMBusAwK_9bgzbABuzmku7iW90ZwHvhaSITJR8_J9oXr3ER/exec";
 
     const sendParams = new URLSearchParams({ action, ...rest });
     const url = `${GAS_URL}?${sendParams.toString()}`;
@@ -58,10 +57,8 @@ export default async function handler(req, res) {
     if (req.method === "OPTIONS") return res.status(200).end();
 
     return res.status(200).send(body);
-
   } catch (error) {
     console.error("Proxy Error:", error);
     return res.status(500).json({ error: error.message });
   }
 }
-
